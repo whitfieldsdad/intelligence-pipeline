@@ -10,7 +10,7 @@ import requests
 from intelligence_pipeline.constants import (
     PROCESSED_OASIS_CTI_OBJECTS_PATH,
     RAW_OASIS_CTI_OBJECTS_DIR,
-    RAW_OASIS_CTI_URL,
+    OASIS_CTI_URL,
     RAW_OASIS_CTI_PATH,
 )
 
@@ -20,7 +20,7 @@ def download_oasis_cti() -> None:
     """
     Download the latest version of the oasis-open/cti-stix-common-objects repository.
     """
-    response = requests.head(RAW_OASIS_CTI_URL, allow_redirects=True, verify=False)
+    response = requests.head(OASIS_CTI_URL, allow_redirects=True, verify=False)
     response.raise_for_status()
 
     url = response.url

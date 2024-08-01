@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 @asset
 def download_raw_epss_files() -> None:
     """
-    GZIP compressed CSV files containing EPSS v3 (v2023.03.01) scores.
+    EPSS v3 (v2023.03.01) scores (CSV.GZ).
     """
     if not os.path.exists(RAW_EPSS_DIR):
         os.makedirs(RAW_EPSS_DIR, exist_ok=True)
@@ -48,7 +48,7 @@ def download_raw_epss_files() -> None:
 @asset(deps=[download_raw_epss_files])
 def process_raw_epss_files():
     """
-    Parquet files containing EPSS v3 (v2023.03.01) scores.
+    EPSS v3 (v2023.03.01) scores (Parquet).
     """
     if not os.path.exists(PROCESSED_EPSS_DIR):
         os.makedirs(PROCESSED_EPSS_DIR, exist_ok=True)

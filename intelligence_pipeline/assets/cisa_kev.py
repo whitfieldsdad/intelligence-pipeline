@@ -4,7 +4,7 @@ from intelligence_pipeline.constants import (
     JSON_INDENT,
     PROCESSED_CISA_KEV_PATH,
     RAW_CISA_KEV_PATH,
-    RAW_CISA_KEV_URL,
+    CISA_KEV_URL,
 )
 from intelligence_pipeline import util
 import polars as pl
@@ -15,9 +15,9 @@ import json
 @asset
 def download_raw_cisa_kev_file() -> None:
     """
-    JSON file containing CISA Known Exploited Vulnerabilities (KEV) catalog.
+    CISA KEV (JSON).
     """
-    response = requests.get(RAW_CISA_KEV_URL, verify=False)
+    response = requests.get(CISA_KEV_URL, verify=False)
     response.raise_for_status()
 
     output_dir = os.path.dirname(RAW_CISA_KEV_PATH)
@@ -31,7 +31,7 @@ def download_raw_cisa_kev_file() -> None:
 @asset(deps=[download_raw_cisa_kev_file])
 def process_raw_cisa_kev_file() -> None:
     """
-    Parquet file containing CISA Known Exploited Vulnerabilities (KEV) catalog.
+    CISA KEV (Parquet).
     """
     output_dir = os.path.dirname(PROCESSED_CISA_KEV_PATH)
     if not os.path.exists(output_dir):

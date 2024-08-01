@@ -11,16 +11,62 @@ import requests
 import os
 
 
-def merge_stix2_bundles(
-    input_files: Iterable[str], output_file: str, indent: int = JSON_INDENT
-) -> None:
-    objects = read_objects_from_stix2_bundles(paths=input_files)
-    bundle = {
+def read_repack_and_write_stix2_objects(
+    input_path: str,
+    output_path: str,
+    include_revoked_objects: bool = False,
+    include_deprecated_objects: bool = False,
+    indent: int = JSON_INDENT,
+):
+    rows = read_objects_from_stix2_bundle(input_path)
+    if not (include_revoked_objects or include_deprecated_objects):
+        rows = filter_stix2_objects(
+            rows=rows,
+            include_revoked_objects=include_revoked_objects,
+            include_deprecated_objects=include_deprecated_objects,
+        )
+
+    bundle = create_stix2_bundle(objects=rows)
+    output_dir = os.path.dirname(output_path)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+
+    with open(output_path, "w") as fp:
+        json.dump(bundle, fp, indent=indent)
+
+
+def filter_stix2_objects(
+    rows: Iterable[dict],
+    include_revoked_objects: bool = False,
+    include_deprecated_objects: bool = False,
+) -> Iterator[dict]:
+
+    for row in rows:
+        if include_revoked_objects is False and row.get("revoked"):
+            continue
+
+        if include_deprecated_objects is False and (
+            row.get("x_capec_status") == "Deprecated" or row.get("x_mitre_deprecated")
+        ):
+            continue
+
+        yield row
+
+
+def create_stix2_bundle(objects: Iterable[dict]) -> dict:
+    return {
         "id": f"bundle--{uuid.uuid4()}",
         "type": "bundle",
         "spec_version": "2.1",
         "objects": list(objects),
     }
+
+
+def merge_stix2_bundles(
+    input_files: Iterable[str], output_file: str, indent: int = JSON_INDENT
+) -> None:
+    objects = read_objects_from_stix2_bundles(paths=input_files)
+    bundle = create_stix2_bundle(objects=objects)
 
     output_dir = os.path.dirname(output_file)
     if not os.path.exists(output_dir):
@@ -106,7 +152,7 @@ def parse_datetime(t: Optional[TIME]) -> datetime.datetime:
 
 
 def extract_date_from_filename(filename: str) -> Optional[datetime.date]:
-    regex = "(\d{4}\-\d{2}\-\d{2})"
+    regex = r"(\d{4}\-\d{2}\-\d{2})"
     match = re.search(regex, filename)
     if match:
         return datetime.datetime.strptime(match.group(1), "%Y-%m-%d").date()
